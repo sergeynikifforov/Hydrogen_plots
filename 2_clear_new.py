@@ -6,6 +6,8 @@ import cantera as ct
 alpha_new = [1.,0.35,0.43,14.3]
 
 
+def from_per_to_alpha(ER,perc):
+    return perc*(2*ER+4.76)/(1-perc)
 def f_0_ER_H2(ER = 1,alpha = 0):
     return 2*ER/(1+2*ER + alpha + 3.76)
 def f_0_ER_O2(ER = 1,alpha = 0):
@@ -61,10 +63,11 @@ def f4(ER_,P_=1,alpha_=0):
     gas_new.equilibrate('HP')
     return float(gas_new.T)
 
-print('Please, input the pressure')
-P_new, alpha = input().split(' ')
+print('Please, input the pressure, alpha, initial temperature')
+P_new, perc_new, T_new = input().split(' ')
+perc_new = float(perc_new)
 P_new = float(P_new)
-alpha = float(alpha)
+T_new = float(T_new)
 
 ER = [i/10. for i in range(0,100)]
 #HP_solution
@@ -72,29 +75,36 @@ gas = ct.Solution('gri30.cti')
 H2conc = [2*value for value in ER]
 T_HP = list()
 for i in range(len(H2conc)):
-    gas.TPX = 300,P_new*ct.one_atm,'H2:%f, O2:1, N2:3.76, H2O:%f'%(H2conc[i],alpha)
+    gas.TPX = T_new, P_new*ct.one_atm, 'H2:%f, O2:1, N2:3.76, H2O:%f'%(H2conc[i],from_per_to_alpha(H2conc[i],perc_new))
     gas.equilibrate('HP')
     T_HP.append(float(gas.T))
 
 
 row1_1 = [i for i in range(900,1200)]
-ans_row1_1 = [f1(val,ER[10],P_new,alpha_=alpha) for val in row1_1]
+ans_row1_1 = [f1(val,ER[10],P_new,alpha_=from_per_to_alpha(ER[10],perc_new)) for val in row1_1]
 
 row2 = [i for i in range(900,1200)]
 ans_row2 = [f2(val) for val in row2]
 
 min_val = []
 for i in range(len(ER)):
-    min = opt.minimize(lambda x: obj_func(f1(x,ER[i],P_new,alpha_=alpha),f2(x)),900.,method='Nelder-Mead')
+    min = opt.minimize(lambda x: obj_func(f1(x,ER[i],P_new,alpha_=from_per_to_alpha(ER[i],perc_new)),f2(x)),900.,method='Nelder-Mead')
     min_val.append(min.x[0])
+
+
 
 min_new_1 = list()
 min_new_2 = list()
 #for i in range(len(alpha)):
-min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,alpha),f4(y,P_new,alpha)),0.2100,method='Nelder-Mead'))
-min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,alpha),f4(y,P_new,alpha)),8.0,method='Nelder-Mead'))
-print('fuel-lean limit is' , min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=alpha))
-print('fuel-rich limit is' , min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=alpha))
+min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,P_new,from_per_to_alpha(y,perc_new))),0.2100,method='Nelder-Mead'))
+min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,P_new,from_per_to_alpha(y,perc_new))),8.0,method='Nelder-Mead'))
+print('fuel-lean limit is' , min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new)))
+print('fuel-rich limit is' , min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new)))
+res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new))
+res_final_H2_1 = f_1_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new))
+print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
+print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
+
 #plot
 plt.subplot(211)
 plt.plot(row1_1, ans_row1_1, label='k1')
