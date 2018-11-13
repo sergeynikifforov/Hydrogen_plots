@@ -121,17 +121,3 @@ plt.xlabel('ER')
 plt.ylabel('T_cross,T_HP')
 plt.legend()
 plt.show()
-'''
-value_H2O = list()
-value_H2 = list()
-new_arr = list()
-for i in range(len(alpha)):
-    new_arr.append([val/1000 for val in range(int(round(min_new_1[i].x[0]*1000)),int(round(1000*min_new_2[i].x[0])))])
-for i in range(len(alpha)):
-    value_H2O.append([f_0_ER_H2O(value,alpha[i]) for value in new_arr[i]])
-    value_H2.append([f_0_ER_H2(value,alpha[i]) for value in new_arr[i]])
-for i in range(len(alpha)):
-    plt.plot(value_H2O[i], value_H2[i])
-plt.legend()
-plt.show()
-'''
