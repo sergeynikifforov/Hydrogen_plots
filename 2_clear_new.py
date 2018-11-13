@@ -57,9 +57,9 @@ def f3(ER_,P_= 1,alpha_ = 0):
     min = opt.minimize(lambda x: obj_func(f1(x,ER_,P_,alpha_),f2(x)),900.,method='Nelder-Mead')
     return float(min.x[0])
 
-def f4(ER_,P_=1,alpha_=0):
+def f4(ER_,T_0=300,P_=1,alpha_=0):
     gas_new = ct.Solution('gri30.cti')
-    gas_new.TPX = 300,P_*ct.one_atm,'H2:%f, O2:1, N2:3.76, H2O:%f'%(2.*ER_,alpha_)
+    gas_new.TPX = T_0,P_*ct.one_atm,'H2:%f, O2:1, N2:3.76, H2O:%f'%(2.*ER_,alpha_)
     gas_new.equilibrate('HP')
     return float(gas_new.T)
 
@@ -72,10 +72,10 @@ T_new = float(T_new)
 ER = [i/10. for i in range(0,100)]
 #HP_solution
 gas = ct.Solution('gri30.cti')
-H2conc = [2*value for value in ER]
+H2conc = [value for value in ER]
 T_HP = list()
 for i in range(len(H2conc)):
-    gas.TPX = T_new, P_new*ct.one_atm, 'H2:%f, O2:1, N2:3.76, H2O:%f'%(H2conc[i],from_per_to_alpha(H2conc[i],perc_new))
+    gas.TPX = T_new, P_new*ct.one_atm, 'H2:%f, O2:1, N2:3.76, H2O:%f'%(2*H2conc[i],from_per_to_alpha(H2conc[i],perc_new))
     gas.equilibrate('HP')
     T_HP.append(float(gas.T))
 
@@ -96,8 +96,9 @@ for i in range(len(ER)):
 min_new_1 = list()
 min_new_2 = list()
 #for i in range(len(alpha)):
-min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,P_new,from_per_to_alpha(y,perc_new))),0.2100,method='Nelder-Mead'))
-min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,P_new,from_per_to_alpha(y,perc_new))),8.0,method='Nelder-Mead'))
+
+min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),0.6,method='Nelder-Mead'))
+min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),5.0+0.6,method='Nelder-Mead'))
 print('fuel-lean limit is' , min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new)))
 print('fuel-rich limit is' , min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new)))
 res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new))
