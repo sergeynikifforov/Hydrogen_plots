@@ -63,7 +63,7 @@ def f4(ER_,T_0=300,P_=1,alpha_=0):
     gas_new.equilibrate('HP')
     return float(gas_new.T)
 
-print('Please, input the pressure, alpha, initial temperature')
+print('Please, input the pressure, percentage of water for zero to one, initial temperature')
 P_new, perc_new, T_new = input().split(' ')
 perc_new = float(perc_new)
 P_new = float(P_new)
@@ -105,6 +105,7 @@ res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0
 res_final_H2_1 = f_1_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new))
 print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
 print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
+print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3]))
 
 #plot
 plt.subplot(211)
