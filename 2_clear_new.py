@@ -3,7 +3,7 @@ import math
 from scipy import optimize as opt
 import cantera as ct
 
-alpha_new = [1.,0.35,0.43,14.3]
+alpha_new = [2.5,1.,1.,16.]
 
 
 def from_per_to_alpha(ER,perc):
@@ -97,8 +97,8 @@ min_new_1 = list()
 min_new_2 = list()
 #for i in range(len(alpha)):
 
-min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),0.6,method='Nelder-Mead'))
-min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),5.0+0.6,method='Nelder-Mead'))
+min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),0.9,method='Nelder-Mead'))
+min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new))),2.5,method='Nelder-Mead'))
 print('fuel-lean limit is' , min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new)))
 print('fuel-rich limit is' , min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new)))
 res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new))
