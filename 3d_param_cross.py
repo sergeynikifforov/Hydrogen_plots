@@ -1,11 +1,21 @@
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 from scipy import optimize as opt
 import cantera as ct
 
 
 alpha_new = [2.5,1.,1.,16.,1.2]
-
+def sign_func(array):
+    if((np.max(array)>0 and np.min(array)>0) or (np.max(array)<0 and np.min(array)<0)):
+        return True
+    else:
+        return False
+def min_val(a,b):
+    if(a>b):
+        return b
+    else:
+        return a
 def from_per_to_alpha(ER, perc_alpha = 0, perc_beta = 0):
     return perc_alpha*(4.76+2*ER)/(1-perc_alpha-perc_beta)
 def from_per_to_beta(ER, perc_alpha = 0, perc_beta = 0):
@@ -93,6 +103,8 @@ def f4(ER_,T_0=300,P_=1,alpha_= 0,beta_ = 0):
     gas_new.TPX = T_0,P_*ct.one_atm,'H2:%f, O2:1, N2:3.76, H2O:%f, CO:%f'%(2.*ER_,alpha_,beta_)
     gas_new.equilibrate('HP')
     return float(gas_new.T)
+
+
 print('Please, input the pressure, percentage of water from zero to one,percentage of carbon monoxide from zero to one,initial temperature')
 P_new, perc_new_alpha, perc_new_beta ,T_new = input().split(' ')
 perc_new_alpha = float(perc_new_alpha)
@@ -129,27 +141,35 @@ for i in range(len(ER)):
     min_val.append(min.x[0])
 
 
+control_arr = list()
+for i in range(len(T_HP)):
+    control_arr.append(T_HP[i]-min_val[i])
 min_new_1 = list()
 min_new_2 = list()
-#for i in range(len(alpha)):
-
-min_new_1.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta))),0.9,method='Nelder-Mead'))
-min_new_2.append(opt.minimize(lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta))),2.5,method='Nelder-Mead'))
-
-
-print('fuel-lean limit is' , min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta)))
-print('fuel-rich limit is' , min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta)))
-res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta))
-res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta))
-res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta))
-res_final_H2_1 = f_1_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta))
-print('The initial percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
-print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_1,4)*100)))
-print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
-print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
-print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
-
-#plot
+if(sign_func(control_arr)):
+    min_new_1.append(-1)
+    min_new_2.append(-1)
+    print('There is no fuel-lean limit or fuel-rich limit')
+    print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
+else:
+    #for i in range(len(alpha)):
+    bouds_new_1 = [(0,res)]
+    bouds_new_2 = [(res,np.max(ER))]
+    fun = lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta))) if y>=0 else np.Inf
+    min_new_2.append(opt.minimize(fun,res-res/3,method='Nelder-Mead'))
+    min_new_1.append(opt.minimize(fun,res+res/3,method='Nelder-Mead'))
+    print('fuel-lean limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta)))
+    print('fuel-rich limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta)))
+    res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta))
+    res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta))
+    res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha,perc_new_beta))
+    res_final_H2_1 = f_1_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha,perc_new_beta),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha,perc_new_beta))
+    print('The initial percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
+    print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_1,4)*100)))
+    print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
+    print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
+    print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
+     #plot
 plt.subplot(211)
 plt.plot(row1_1, ans_row1_1, label='k1')
 plt.plot(row2, ans_row2, label='k2')
