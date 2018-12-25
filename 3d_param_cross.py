@@ -153,8 +153,6 @@ if(sign_func(control_arr)):
     print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
 else:
     #for i in range(len(alpha)):
-    bouds_new_1 = [(0,res)]
-    bouds_new_2 = [(res,np.max(ER))]
     fun = lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta)),f4(y,T_new,P_new,from_per_to_alpha(y,perc_new_alpha,perc_new_beta),from_per_to_beta(y,perc_new_alpha,perc_new_beta))) if y>=0 else np.Inf
     min_new_2.append(opt.minimize(fun,res-res/3,method='Nelder-Mead'))
     min_new_1.append(opt.minimize(fun,res+res/3,method='Nelder-Mead'))

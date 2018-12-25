@@ -8,10 +8,16 @@ alpha_new = [2.5,1.,1.,16.,1.2]
 
 
 def sign_func(array):
-    if((np.max(array)>0 and np.min(array)>0) or (np.max(array)<0 and np.min(array)<0)):
-        return True
+    counter = 0
+    for i in range(len(array)-1):
+        if((array[i]>=0 and array[i+1]<0) or (array[i]>0 and array[i+1]<=0) or (array[i]<=0 and array[i+1]>0) or (array[i]<0 and array[i+1]>=0)):
+            counter+=1
+    if(counter == 0):
+        return 0
+    elif(counter == 1):
+        return 1
     else:
-        return False
+        return 2
 def func_calc_T_HP(ER_,T_new_,P_new_,perc_new_alpha_,perc_new_beta_):
     #HP_solution
     gas = ct.Solution('gri30.cti')
@@ -151,7 +157,9 @@ if(number=='1'):
     for j in range(len(perc_new_alpha)):
         min_val = []
         for i in range(len(ER)):
-            min = opt.minimize(lambda x: obj_func(f1(x,ER[i],P_new,alpha_=from_per_to_alpha(ER[i],perc_new_alpha[j],perc_new_beta[0]),beta_ = from_per_to_beta(ER[i],perc_new_alpha[j],perc_new_beta[0])),f2(x)),900.,method='Nelder-Mead')
+            min = opt.minimize(lambda x: obj_func(
+                                                    f1( x, ER[i], P_new, alpha_=from_per_to_alpha( ER[i], perc_new_alpha[j] , perc_new_beta[0] ), beta_ = from_per_to_beta( ER[i] , perc_new_alpha[j] , perc_new_beta[0] ) ) ,
+                                                    f2( x ) ),900.,method='Nelder-Mead')
             min_val.append(min.x[0])
         min_val_final.append(min_val)
     control_arr_final = list()
@@ -162,24 +170,36 @@ if(number=='1'):
         control_arr_final.append(control_arr)
     min_new_1_final = list()
     min_new_2_final = list()
+    print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
     for j in range(len(perc_new_alpha)):
         min_new_1 = list()
         min_new_2 = list()
-        print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
-        if(sign_func(control_arr)):
-            min_new_1.append(-1)
-            min_new_2.append(-1)
+        if(sign_func(control_arr_final[j]) == 0):
             print('There is no fuel-lean limit or fuel-rich limit')
+        elif(sign_func(control_arr_final[j]) == 1):
+            min_new_1 = list()
+
+            fun = lambda y: obj_func(
+                                      f3(  y, P_new, from_per_to_alpha( y, perc_new_alpha[j], perc_new_beta[0] ), from_per_to_beta( y, perc_new_alpha[j], perc_new_beta[0]  ) ),
+                                      f4(  y, T_new[0], P_new, from_per_to_alpha( y, perc_new_alpha[j], perc_new_beta[0] ), from_per_to_beta( y, perc_new_alpha[j], perc_new_beta[0] )  )
+                                    ) if y>=0 else np.Inf
+
+            min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
+
+            print('There is no fuel-lean limit')
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
+            res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
+            print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
+            print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
         else:
-            #for i in range(len(alpha)):
-            bouds_new_1 = [(0,res_final[j])]
-            bouds_new_2 = [(res_final[j],np.max(ER))]
+
             fun = lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(y,perc_new_alpha[j],perc_new_beta[0])),f4(y,T_new[0],P_new,from_per_to_alpha(y,perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(y,perc_new_alpha[j],perc_new_beta[0]))) if y>=0 else np.Inf
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-lean limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
-            print('fuel-rich limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
@@ -226,7 +246,9 @@ elif(number=='2'):
     for j in range(len(perc_new_beta)):
         min_val = []
         for i in range(len(ER)):
-            min = opt.minimize(lambda x: obj_func(f1(x,ER[i],P_new,alpha_=from_per_to_alpha(ER[i],perc_new_alpha[0],perc_new_beta[j]),beta_ = from_per_to_beta(ER[i],perc_new_alpha[0],perc_new_beta[j])),f2(x)),900.,method='Nelder-Mead')
+            min = opt.minimize(lambda x: obj_func(
+                                                    f1( x, ER[i], P_new, alpha_=from_per_to_alpha( ER[i], perc_new_alpha[0], perc_new_beta[j] ), beta_ = from_per_to_beta( ER[i], perc_new_alpha[0] ,perc_new_beta[j] ) ),
+                                                    f2( x ) ),900.,method='Nelder-Mead')
             min_val.append(min.x[0])
         min_val_final.append(min_val)
     control_arr_final = list()
@@ -237,24 +259,39 @@ elif(number=='2'):
         control_arr_final.append(control_arr)
     min_new_1_final = list()
     min_new_2_final = list()
+    print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
     for j in range(len(perc_new_beta)):
         min_new_1 = list()
         min_new_2 = list()
-        print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
-        if(sign_func(control_arr)):
-            min_new_1.append(-1)
-            min_new_2.append(-1)
+        if(sign_func(control_arr_final[j]) == 0):
             print('There is no fuel-lean limit or fuel-rich limit')
+        elif(sign_func(control_arr_final[j]) == 1):
+            min_new_1 = list()
+
+            fun = lambda y: obj_func(
+                                      f3(  y, P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[j] ), from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[j]  ) ),
+                                      f4(  y, T_new[0], P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[j] ), from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[j] )  )
+                                    ) if y>=0 else np.Inf
+
+            min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
+
+            print('There is no fuel-lean limit')
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
+            res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
+            print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
+            print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
         else:
-            #for i in range(len(alpha)):
-            bouds_new_1 = [(0,res_final[j])]
-            bouds_new_2 = [(res_final[j],np.max(ER))]
-            fun = lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(y,perc_new_alpha[0],perc_new_beta[j])),f4(y,T_new[0],P_new,from_per_to_alpha(y,perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(y,perc_new_alpha[0],perc_new_beta[j]))) if y>=0 else np.Inf
+
+            fun = lambda y: obj_func(
+                                    f3( y ,P_new , from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[j] ), from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[j] ) ),
+                                    f4( y, T_new[0], P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[j] ), from_per_to_beta( y, perc_new_alpha[0] , perc_new_beta[j] ) )
+                                    ) if y>=0 else np.Inf
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-lean limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
-            print('fuel-rich limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
@@ -302,7 +339,9 @@ else:
     for j in range(len(T_new)):
         min_val = []
         for i in range(len(ER)):
-            min = opt.minimize(lambda x: obj_func(f1(x,ER[i],P_new,alpha_=from_per_to_alpha(ER[i],perc_new_alpha[0],perc_new_beta[0]),beta_ = from_per_to_beta(ER[i],perc_new_alpha[0],perc_new_beta[0])),f2(x)),900.,method='Nelder-Mead')
+            min = opt.minimize(lambda x: obj_func(
+                                                f1( x, ER[i], P_new, alpha_=from_per_to_alpha( ER[i], perc_new_alpha[0], perc_new_beta[0] ), beta_ = from_per_to_beta( ER[i], perc_new_alpha[0], perc_new_beta[0] ) ),
+                                                f2( x ) ),900.,method='Nelder-Mead')
             min_val.append(min.x[0])
         min_val_final.append(min_val)
     control_arr_final = list()
@@ -313,32 +352,47 @@ else:
         control_arr_final.append(control_arr)
     min_new_1_final = list()
     min_new_2_final = list()
+    print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
     for j in range(len(T_new)):
         min_new_1 = list()
         min_new_2 = list()
-        print('The efficiency coefficient for H2 is {}, for O2 is {}, for N2 is {}, for H2O is {}, for CO is {}'.format(alpha_new[0],alpha_new[1],alpha_new[2],alpha_new[3],alpha_new[4]))
-        if(sign_func(control_arr)):
-            min_new_1.append(-1)
-            min_new_2.append(-1)
+        if(sign_func(control_arr_final[j]) == 0):
             print('There is no fuel-lean limit or fuel-rich limit')
+        elif(sign_func(control_arr_final[j]) == 1):
+            min_new_1 = list()
+
+            fun = lambda y: obj_func(
+                                      f3(  y, P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[0] ), from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[0]  ) ),
+                                      f4(  y, T_new[j], P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[0] ), from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[0] )  )
+                                    ) if y>=0 else np.Inf
+
+            min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
+
+            print('There is no fuel-lean limit')
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
+            res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
+            print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
+            print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
         else:
-            #for i in range(len(alpha)):
-            bouds_new_1 = [(0,res_final[j])]
-            bouds_new_2 = [(res_final[j],np.max(ER))]
-            fun = lambda y: obj_func(f3(y,P_new,from_per_to_alpha(y,perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(y,perc_new_alpha[0],perc_new_beta[0])),f4(y,T_new[j],P_new,from_per_to_alpha(y,perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(y,perc_new_alpha[0],perc_new_beta[0]))) if y>=0 else np.Inf
+
+            fun = lambda y: obj_func(
+                                        f3( y, P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[0] ),from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[0] ) ),
+                                        f4( y, T_new[j], P_new, from_per_to_alpha( y, perc_new_alpha[0], perc_new_beta[0] ),from_per_to_beta( y, perc_new_alpha[0], perc_new_beta[0] ) )
+                                        ) if y>=0 else np.Inf
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-lean limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
-            print('fuel-rich limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_final_H2_1 = f_1_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
-            print('The initial percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
-            print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_1,4)*100)))
-            print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
-            print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
+            print('The initial percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_initial_H2_1,4)*100)))
+            print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
+            print('The final percentage of H2 for fuel-lean limit is {:.4f}'.format((round(res_final_H2_1,4)*100)))
+            print('The final percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_final_H2_0,4)*100)))
         min_new_1_final.append(min_new_1)
         min_new_2_final.append(min_new_2)
 
