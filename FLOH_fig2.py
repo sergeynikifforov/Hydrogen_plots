@@ -165,8 +165,8 @@ def f4(ER_,T_0=300,P_=1,alpha_= 0,beta_ = 0):
 #def run():
 
 ER = [i/10. for i in range(0,200)]
-perc_new_beta = [i/100. for i in range(0,99)]
-perc_new_alpha = [0.012] #[0.]
+perc_new_beta = [i/100. for i in range(0,100)]
+perc_new_alpha = [0.0] #[0.]
 P_new = 1.
 
 print('initial temperature')
@@ -320,15 +320,37 @@ for i in range(len(min_new_2_final)):
 
 
 #data    visualistaion
-plt.plot(x_new,y_new)
-#plt.plot(x2_new,y2_new)
+#150
+#x_exp = [0, 2.63584,6.19139,25.73025,50.39820,75.28581,100]
+#y_exp = [76.35838,78.90173,78.90173,78.30058,78.34682,78.30058,79.36416]
+#18
+x_exp = [0,2.75658,6.08478,25.61721,50.26718,75.14965,100]
+y_exp = [72.33526,75.24856,75.06358,74.231213,73.63006,73.39884,74.41618]
+#300
+#x_exp = [0,2.46114,6.23250,25.78805,50.23250,75.34361,100]
+#y_exp = [76.26590,80.61272,80.38150,80.38150,80.38150,80.38150,80.56647]
+plt.plot(x_new,y_new,label='experimental (18 degrees Celsius)')
+plt.plot(x_exp,y_exp,label='theoretical data (18 degrees Celsius)')
+plt.ylim(66,100)
+plt.xlabel('percentage of hydrogen in fuel, %')
+plt.ylabel('percentage of fuel in mixture, %')
+plt.legend()
 plt.show()
 
-
-x2_exp = [0,5.83475,25.51280,50.17858,75.079545,100]
-y2_exp = [12.14035,9.824561,6.84211,5.017544,3.75439,3.05263]
-plt.plot(x2_new,y2_new)
-plt.plot(x2_exp,y2_exp)
+#150
+#x2_exp = [0,5.83475,25.51280,50.17858,75.079545,100]
+#y2_exp = [12.14035,9.824561,6.84211,5.017544,3.75439,3.05263]
+#18
+x2_exp = [0,1.62800,6.10891,25.33421,50.20121,75.31472,100]
+y2_exp = [13.57895,12.456140,11.47368,7.85965,5.64912,4.31578,3.75438]
+#300
+#x2_exp = [0,25.65994,50.12198,75.25813,100]
+#y2_exp = [9.96491,4.94737,3.43860,2.73684,2.21053]
+plt.plot(x2_new,y2_new,label='experimental data (18 degrees Celsius)')
+plt.plot(x2_exp,y2_exp,label='theoretical data (18 degrees Celsius)')
+plt.xlabel('percentage of hydrogen in fuel, %')
+plt.ylabel('percentage of fuel in mixture, %')
+plt.legend()
 plt.show()
 
 #data output

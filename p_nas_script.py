@@ -1,6 +1,6 @@
 import numpy as np
 #Сelsius
-T_cr = 374+273.15
+T_cr = 647.15
 r = 9685.7142
 
 # P: 0.1 MpA .. 22 MpA

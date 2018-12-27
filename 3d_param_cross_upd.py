@@ -187,7 +187,7 @@ if(number=='1'):
             min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
 
             print('There is no fuel-lean limit')
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
@@ -198,8 +198,8 @@ if(number=='1'):
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
-            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f4(min_new_2[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[j],perc_new_beta[0]))
@@ -213,9 +213,9 @@ if(number=='1'):
 
     for j in range(len(perc_new_alpha)):
         plt.plot(ER, min_val_final[j],label='Crossover with percentage of water {}'.format(perc_new_alpha[j]))
-        plt.plot(ER, T_HP_final[j],label='T_HP with percentage of water {}'.format(perc_new_alpha[j]),dashes = [2,2])
+        plt.plot(ER, T_HP_final[j],label='Ad. temp. with percentage of water {}'.format(perc_new_alpha[j]),dashes = [2,2])
         plt.xlabel('ER')
-        plt.ylabel('T_cross,T_HP')
+        plt.ylabel('T$_{cross}$, T$_{adiab}$ , K')
         plt.legend()
     plt.show()
 elif(number=='2'):
@@ -276,7 +276,7 @@ elif(number=='2'):
             min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
 
             print('There is no fuel-lean limit')
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
@@ -290,8 +290,8 @@ elif(number=='2'):
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
-            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f4(min_new_2[0].x[0],T_new[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[j]))
@@ -305,9 +305,9 @@ elif(number=='2'):
 
     for j in range(len(perc_new_beta)):
         plt.plot(ER, min_val_final[j],label='Crossover with percentage of carbon monoxide {}'.format(perc_new_beta[j]))
-        plt.plot(ER, T_HP_final[j],label='T_HP with percentage of carbon monoxide {}'.format(perc_new_beta[j]),dashes = [2,2])
+        plt.plot(ER, T_HP_final[j],label='Ad. temp. with percentage of carbon monoxide {}'.format(perc_new_beta[j]),dashes = [2,2])
         plt.xlabel('ER')
-        plt.ylabel('T_cross,T_HP')
+        plt.ylabel('T$_{cross}$, T$_{adiab}$ , K')
         plt.legend()
     plt.show()
 
@@ -369,7 +369,7 @@ else:
             min_new_1.append(  opt.minimize( fun, res_final[j]+res_final[j]/3, method='Nelder-Mead' )  )
 
             print('There is no fuel-lean limit')
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[j],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             print('The initial percentage of H2 for fuel-rich limit is {:.4f}'.format((round(res_initial_H2_0,4)*100)))
@@ -383,8 +383,8 @@ else:
             min_new_2.append(opt.minimize(fun,res_final[j]-res_final[j]/3,method='Nelder-Mead'))
             min_new_1.append(opt.minimize(fun,res_final[j]+res_final[j]/3,method='Nelder-Mead'))
 
-            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f3(min_new_1[0].x[0],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
-            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f3(min_new_2[0].x[0],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            print('fuel-rich limit is', min_new_1[0].x[0],'with temperature:',f4(min_new_1[0].x[0],T_new[j],alpha_=from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
+            print('fuel-lean limit is', min_new_2[0].x[0],'with temperature:',f4(min_new_2[0].x[0],T_new[j],alpha_=from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),beta_=from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0])))
             res_initial_H2_0 = f_0_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_initial_H2_1 = f_0_ER_H2( min_new_2[0].x[0],from_per_to_alpha(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_2[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
             res_final_H2_0 = f_1_ER_H2( min_new_1[0].x[0],from_per_to_alpha(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]),from_per_to_beta(min_new_1[0].x[0],perc_new_alpha[0],perc_new_beta[0]))
@@ -398,8 +398,8 @@ else:
 
     for j in range(len(T_new)):
         plt.plot(ER, min_val_final[j],label='Crossover with initial temperature {}'.format(T_new[j]))
-        plt.plot(ER, T_HP_final[j],label='T_HP with initial temperature {}'.format(T_new[j]),dashes = [2,2])
+        plt.plot(ER, T_HP_final[j],label='Ad. temp. with initial temperature {}'.format(T_new[j]),dashes = [2,2])
         plt.xlabel('ER')
-        plt.ylabel('T_cross,T_HP')
+        plt.ylabel('T$_{cross}$, T$_{adiab}$, K')
         plt.legend()
     plt.show()
